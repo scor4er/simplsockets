@@ -42,5 +42,10 @@ namespace SimplSockets
         /// An event that is fired whenever a socket communication error occurs. Hook into this to do something when communication errors happen.
         /// </summary>
         event EventHandler<SocketErrorArgs> Error;
+
+        /// <summary>
+        /// Shows if connection is established at the moment
+        /// </summary>
+        bool IsConnected { get; }
     }
 }

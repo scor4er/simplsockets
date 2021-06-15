@@ -62,24 +62,20 @@ namespace SimplSockets
         public SimplSocketServer(Func<Socket> socketFunc, int messageBufferSize = 65536, int communicationTimeout = 10000, int maxMessageSize = 10 * 1024 * 1024, bool useNagleAlgorithm = false)
         {
             // Sanitize
-            if (socketFunc == null)
-            {
-                throw new ArgumentNullException("socketFunc");
-            }
             if (messageBufferSize < 512)
             {
-                throw new ArgumentException("must be >= 512", "messageBufferSize");
+                throw new ArgumentException("must be >= 512", nameof(messageBufferSize));
             }
             if (communicationTimeout < 5000)
             {
-                throw new ArgumentException("must be >= 5000", "communicationTimeout");
+                throw new ArgumentException("must be >= 5000", nameof(communicationTimeout));
             }
             if (maxMessageSize < 1024)
             {
-                throw new ArgumentException("must be >= 1024", "maxMessageSize");
+                throw new ArgumentException("must be >= 1024", nameof(maxMessageSize));
             }
 
-            _socketFunc = socketFunc;
+            _socketFunc = socketFunc ?? throw new ArgumentNullException(nameof(socketFunc));
             _messageBufferSize = messageBufferSize;
             _communicationTimeout = communicationTimeout;
             _maxMessageSize = maxMessageSize;
@@ -127,7 +123,7 @@ namespace SimplSockets
             // Sanitize
             if (localEndpoint == null)
             {
-                throw new ArgumentNullException("localEndpoint");
+                throw new ArgumentNullException(nameof(localEndpoint));
             }
 
             lock (_isListeningLock)
@@ -173,7 +169,7 @@ namespace SimplSockets
             // Sanitize
             if (message == null)
             {
-                throw new ArgumentNullException("message");
+                throw new ArgumentNullException(nameof(message));
             }
 
             // Get the current thread ID
@@ -229,7 +225,7 @@ namespace SimplSockets
             // Sanitize
             if (message == null)
             {
-                throw new ArgumentNullException("message");
+                throw new ArgumentNullException(nameof(message));
             }
             if (receivedMessage.Socket == null)
             {
@@ -289,13 +285,7 @@ namespace SimplSockets
         /// <summary>
         /// Gets the currently connected client count.
         /// </summary>
-        public int CurrentlyConnectedClientCount
-        {
-            get
-            {
-                return _currentlyConnectedClients.Count;
-            }
-        }
+        public int CurrentlyConnectedClientCount => _currentlyConnectedClients.Count;
 
         /// <summary>
         /// An event that is fired when a client successfully connects to the server. Hook into this to do something when a connection succeeds.
@@ -323,8 +313,6 @@ namespace SimplSockets
 
         private void KeepAlive()
         {
-            List<Socket> bustedClients = null;
-
             while (true)
             {
                 Thread.Sleep(1000);
@@ -334,7 +322,7 @@ namespace SimplSockets
                     continue;
                 }
 
-                bustedClients = null;
+                List<Socket> bustedClients = null;
 
                 // Do the keep-alive
                 _currentlyConnectedClientsLock.EnterReadLock();
@@ -501,7 +489,7 @@ namespace SimplSockets
             if (bytesRead > 0)
             {
                 // Add to receive queue
-                BlockingQueue<SocketAsyncEventArgs> receiveBufferQueue = null;
+                BlockingQueue<SocketAsyncEventArgs> receiveBufferQueue;
                 _currentlyConnectedClientsReceiveQueuesLock.EnterReadLock();
                 try
                 {
@@ -545,7 +533,7 @@ namespace SimplSockets
 
             var handler = connectedClient.Socket;
 
-            BlockingQueue<SocketAsyncEventArgs> receiveBufferQueue = null;
+            BlockingQueue<SocketAsyncEventArgs> receiveBufferQueue;
             _currentlyConnectedClientsReceiveQueuesLock.EnterReadLock();
             try
             {
@@ -614,7 +602,8 @@ namespace SimplSockets
                             // Ensure message is not larger than maximum message size
                             if (bytesToRead > _maxMessageSize)
                             {
-                                HandleCommunicationError(handler, new InvalidOperationException(string.Format("message of length {0} exceeds maximum message length of {1}", bytesToRead, _maxMessageSize)));
+                                HandleCommunicationError(handler, new InvalidOperationException(
+                                    $"message of length {bytesToRead} exceeds maximum message length of {_maxMessageSize}"));
                                 return;
                             }
                         }
@@ -809,13 +798,11 @@ namespace SimplSockets
         {
             public ConnectedClient(Socket socket)
             {
-                if (socket == null) throw new ArgumentNullException("socket");
-
-                Socket = socket;
+                Socket = socket ?? throw new ArgumentNullException(nameof(socket));
                 LastResponse = DateTime.UtcNow;
             }
 
-            public Socket Socket { get; private set; }
+            public Socket Socket { get; }
 
             public DateTime LastResponse { get; set; }
         }

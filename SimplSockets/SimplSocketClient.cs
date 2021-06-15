@@ -71,6 +71,7 @@ namespace SimplSockets
         /// <param name="communicationTimeout">The communication timeout, in milliseconds.</param>
         /// <param name="maxMessageSize">The maximum message size.</param>
         /// <param name="useNagleAlgorithm">Whether or not to use the Nagle algorithm.</param>
+        /// <param name="keepAliveRequestTimeout">Timeout during which the request must be kept alive, in milliseconds</param>
         public SimplSocketClient(Func<Socket> socketFunc,
                                  int messageBufferSize = 65536,
                                  int communicationTimeout = 10000,
@@ -79,24 +80,20 @@ namespace SimplSockets
                                  int keepAliveRequestTimeout = 1000)
         {
             // Sanitize
-            if (socketFunc == null)
-            {
-                throw new ArgumentNullException("socketFunc");
-            }
             if (messageBufferSize < 512)
             {
-                throw new ArgumentException("must be >= 512", "messageBufferSize");
+                throw new ArgumentException("must be >= 512", nameof(messageBufferSize));
             }
             if (communicationTimeout < 5000)
             {
-                throw new ArgumentException("must be >= 5000", "communicationTimeout");
+                throw new ArgumentException("must be >= 5000", nameof(communicationTimeout));
             }
             if (maxMessageSize < 1024)
             {
-                throw new ArgumentException("must be >= 1024", "maxMessageSize");
+                throw new ArgumentException("must be >= 1024", nameof(maxMessageSize));
             }
 
-            _socketFunc = socketFunc;
+            _socketFunc = socketFunc ?? throw new ArgumentNullException(nameof(socketFunc));
             _messageBufferSize = messageBufferSize;
             _communicationTimeout = communicationTimeout;
             _maxMessageSize = maxMessageSize;
@@ -160,7 +157,7 @@ namespace SimplSockets
             // Sanitize
             if (endPoint == null)
             {
-                throw new ArgumentNullException("endPoint");
+                throw new ArgumentNullException(nameof(endPoint));
             }
 
             lock (_isConnectedLock)
@@ -230,7 +227,7 @@ namespace SimplSockets
             // Sanitize
             if (message == null)
             {
-                throw new ArgumentNullException("message");
+                throw new ArgumentNullException(nameof(message));
             }
 
             // Get the current thread ID
@@ -258,7 +255,7 @@ namespace SimplSockets
             // Sanitize
             if (message == null)
             {
-                throw new ArgumentNullException("message");
+                throw new ArgumentNullException(nameof(message));
             }
 
             // Get the current thread ID
@@ -336,7 +333,7 @@ namespace SimplSockets
             _socket.Close();
         }
 
-        protected virtual void KeepAlive(Socket socket, CancellationToken cancellationToken = default(CancellationToken))
+        protected virtual void KeepAlive(Socket socket, CancellationToken cancellationToken = default)
         {
             _lastResponse = DateTime.UtcNow;
 
@@ -436,7 +433,7 @@ namespace SimplSockets
             TryUnsafeSocketOperation(socket, SocketAsyncOperation.Receive, socketAsyncEventArgs);
         }
 
-        protected void ProcessSendQueue(Socket handler, CancellationToken cancellationToken = default(CancellationToken))
+        protected void ProcessSendQueue(Socket handler, CancellationToken cancellationToken = default)
         {
             while (_isConnected)
             {
@@ -463,12 +460,12 @@ namespace SimplSockets
             }
         }
 
-        protected void ProcessReceivedMessage(Socket handler, CancellationToken cancellationToken = default(CancellationToken))
+        protected void ProcessReceivedMessage(Socket handler, CancellationToken cancellationToken = default)
         {
             ProcessReceivedMessageInternal(handler, cancellationToken);
         }
 
-        protected virtual void ProcessReceivedMessageInternal(Socket handler, CancellationToken cancellationToken = default(CancellationToken))
+        protected virtual void ProcessReceivedMessageInternal(Socket handler, CancellationToken cancellationToken = default)
         {
             int bytesToRead = -1;
             int threadId = -1;
@@ -523,7 +520,8 @@ namespace SimplSockets
                             // Ensure message is not larger than maximum message size
                             if (bytesToRead > _maxMessageSize)
                             {
-                                HandleCommunicationError(handler, new InvalidOperationException(string.Format("message of length {0} exceeds maximum message length of {1}", bytesToRead, _maxMessageSize)));
+                                HandleCommunicationError(handler, new InvalidOperationException(
+                                    $"message of length {bytesToRead} exceeds maximum message length of {_maxMessageSize}"));
                                 return;
                             }
                         }
