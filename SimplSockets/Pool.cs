@@ -7,7 +7,7 @@ namespace SimplSockets
     /// A pool of objects that can be reused to manage memory efficiently.
     /// </summary>
     /// <typeparam name="T">The type of object that is pooled.</typeparam>
-    internal sealed class Pool<T> where T : class
+    public sealed class Pool<T> where T : class
     {
         // The queue that holds the items
         private readonly List<T> _queue = null;

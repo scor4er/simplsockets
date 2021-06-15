@@ -9,7 +9,7 @@ namespace SimplSockets
     /// This class is thread safe.
     /// </summary>
     /// <typeparam name="T">The type of the object contained in the queue.</typeparam>
-    internal sealed class BlockingQueue<T>
+    public sealed class BlockingQueue<T>
     {
         // The underlying queue
         private readonly List<T> _queue = new List<T>();

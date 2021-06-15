@@ -10,12 +10,12 @@ namespace SimplSockets
         /// <summary>
         /// Internal constructor.
         /// </summary>
-        internal SocketErrorArgs() { }
+        public SocketErrorArgs() { }
 
         /// <summary>
         /// The exception.
         /// </summary>
-        public Exception Exception { get; internal set; }
+        public Exception Exception { get; set; }
     }
 }
 
