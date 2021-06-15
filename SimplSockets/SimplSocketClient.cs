@@ -22,7 +22,7 @@ namespace SimplSockets
         protected readonly int _communicationTimeout = 0;
         protected readonly int _keepAliveRequestTimeout = 0;
         // The communication timeout, in milliseconds
-        private readonly int _keepAliveTimeout = Int32.MaxValue;
+        protected readonly int _keepAliveTimeout = Int32.MaxValue;
         // The maximum message size
         protected readonly int _maxMessageSize = 0;
         // Whether or not to use the Nagle algorithm
@@ -52,7 +52,7 @@ namespace SimplSockets
         private readonly Pool<MultiplexerData> _multiplexerDataPool = null;
         protected readonly Pool<SocketAsyncEventArgs> _socketAsyncEventArgsSendPool = null;
         protected readonly Pool<SocketAsyncEventArgs> _socketAsyncEventArgsReceivePool = null;
-        private readonly Pool<SocketAsyncEventArgs> _socketAsyncEventArgsKeepAlivePool = null;
+        protected readonly Pool<SocketAsyncEventArgs> _socketAsyncEventArgsKeepAlivePool = null;
         private readonly Pool<ReceivedMessage> _receivedMessagePool = null;
         private readonly Pool<MessageReceivedArgs> _messageReceivedArgsPool = null;
         private readonly Pool<SocketErrorArgs> _socketErrorArgsPool = null;
@@ -336,7 +336,7 @@ namespace SimplSockets
             _socket.Close();
         }
 
-        protected void KeepAlive(Socket socket, CancellationToken cancellationToken = default(CancellationToken))
+        protected virtual void KeepAlive(Socket socket, CancellationToken cancellationToken = default(CancellationToken))
         {
             _lastResponse = DateTime.UtcNow;
 
